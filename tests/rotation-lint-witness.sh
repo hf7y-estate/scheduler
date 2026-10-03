@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Witness for bin/rotation-lint.sh -- "is any project enabled in more than one
 # host's rotation file?", i.e. CROSS-HOST DOUBLE DISPATCH, the direction
-# bin/sync-crontab.sh's own guard does not cover (that one asks the fixed-cron
-# question: a crontab line vs. rotation membership).
+# bin/sync-crontab.sh's own guard never covered, back when that script
+# existed (retired 2026-09-02, #454/#488) -- that one asked the fixed-cron
+# question: a crontab line vs. rotation membership.
 #
 # THE HAZARD, stated so a failure here is legible: mandark and dexter run
 # bin/usage-paced-runner.sh out of ONE git-tracked repo, each reading its own

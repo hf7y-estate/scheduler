@@ -51,8 +51,11 @@
 #                              convention schedule/_paced.<host>.conf uses.
 #   3. schedule/_usage.conf    the shared base, and the normal place to set
 #                              these -- edit it and the next tick picks it up,
-#                              no `sync-crontab.sh --apply`, nothing retyped
-#                              onto a crontab line.
+#                              no `--apply` step, nothing retyped onto a
+#                              crontab line (sync-crontab.sh, which once did
+#                              that retyping, retired 2026-09-02, #454/#488;
+#                              `dose <project> --apply` does the analogous
+#                              job for RUNNER_ENV today, see below).
 #   4. the built-in defaults below (also the fallback for a copy install whose
 #                              repo can't be located at all).
 # RETIRES: putting `USAGE_CEILING=...` in `schedule/_runner.conf`'s RUNNER_ENV

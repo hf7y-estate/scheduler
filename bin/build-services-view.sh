@@ -157,8 +157,9 @@ INDEX="$SERVICES/README.md"
 shopt -s nullglob
 for conf in "$DIR"/schedule/*.conf; do
   # Underscore-prefixed files are meta-config (_batch.conf, _paced.conf,
-  # _runner.conf, ...), not projects -- same convention sync-crontab.sh's
-  # project glob already follows. Sourcing one as a project conf is worse
+  # _runner.conf, ...), not projects -- the same convention sync-crontab.sh's
+  # project glob followed, back when that script existed (retired 2026-09-02,
+  # #454/#488). Sourcing one as a project conf is worse
   # than a cosmetic miss: _paced.conf's "name|enabled|cmd" lines get read as
   # shell and can execute a real participant wrapper (network call, hangs).
   case "$(basename "$conf")" in _*) continue ;; esac
