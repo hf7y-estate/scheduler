@@ -48,12 +48,15 @@
 # rows an account can actually run, which is one. Under host dispatch
 # (hf7y/scheduler#55) it becomes a real knob; today only the interval is.
 #
-# THIS FILE IS THE ONLY PLACE THE RATE IS SET. _runner.<host>.conf's RUNNER_CRON
-# is deliberately left alone: it is the legacy writer, applied by running
-# `sync-crontab.sh --apply` AS EACH ACCOUNT, which is the five-way manual dance
-# hf7y/scheduler#81 exists to retire. Editing both would have made two writers
-# for one fact, and whichever ran last would win silently -- exactly
-# hf7y/scheduler#119. Change the rate HERE and converge with the verb:
+# THIS FILE IS THE ONLY PLACE THE RATE IS SET. AT THE TIME this was written,
+# _runner.<host>.conf's RUNNER_CRON was deliberately left alone: it was the
+# legacy writer, applied by running `sync-crontab.sh --apply` AS EACH ACCOUNT,
+# the five-way manual dance hf7y/scheduler#81 existed to retire. Editing both
+# would have made two writers for one fact, and whichever ran last would win
+# silently -- exactly hf7y/scheduler#119. HISTORY now: RUNNER_CRON itself was
+# retired 2026-08-22 (#81) and sync-crontab.sh followed it 2026-09-02
+# (#454/#488), so there is no second writer left to collide with. Change the
+# rate HERE and converge with the verb:
 #
 #     dose <project> --apply        (on the host named in the row)
 #

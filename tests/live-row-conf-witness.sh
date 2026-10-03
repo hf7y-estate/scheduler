@@ -12,8 +12,9 @@
 # The other half of case 5 -- that a live row's conf sets CRON_HOST and
 # CRON_ACCOUNT -- went with roster-diff on purpose. Its failure text said
 # "roster-diff derives parked for it and can never exit 0", which was the whole
-# reason it existed; bin/sync-crontab.sh defaults CRON_ACCOUNT to the local
-# account when unset, so its absence is not the outage this one is.
+# reason it existed; bin/scheduler's state_account()/state_home()
+# (bin/scheduler:478-494) default CRON_ACCOUNT to the local account when
+# unset, so its absence is not the outage this one is.
 set -uo pipefail
 PASS=0; FAIL=0
 ok()  { PASS=$((PASS+1)); echo "  ok    $1"; }

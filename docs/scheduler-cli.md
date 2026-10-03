@@ -129,14 +129,19 @@ against: which facts the machinery records and which views print them.
   what runs here are the same file, on any host. `scheduler next` prints
   the resolved path and why it was chosen.
 - **Which projects the paced system OWNS** — a *different* question, and
-  deliberately not the same answer. `bin/sync-crontab.sh` suppresses a
-  project's fixed nightly `BATCH` cron line when that project is listed in
-  **any** host's rotation (`lib/paced-conf.sh`'s `paced_membership_set`,
-  the union across `_paced.conf` and every `_paced.<host>.conf`), because a
-  fixed line for a project *another* host's runner dispatches is
-  cross-host double dispatch. "Does it dispatch *here*, as this account,
-  right now?" stays host-resolved — that is what the foreign-`CRON_ACCOUNT`
-  guard checks. See `tests/sync-crontab-paced-witness.sh`.
+  deliberately not the same answer. HISTORY: `bin/sync-crontab.sh` (retired
+  2026-09-02, #454/#488) suppressed a project's fixed nightly `BATCH` cron
+  line when that project was listed in **any** host's rotation
+  (`lib/paced-conf.sh`'s `paced_membership_set`, the union across
+  `_paced.conf` and every `_paced.<host>.conf`), because a fixed line for a
+  project *another* host's runner dispatches was cross-host double dispatch.
+  Nothing installs a per-project cron line any more, so there is nothing
+  left to suppress — `paced_membership_set` is unreferenced outside its own
+  file, `bin/rotation-lint.sh`, and tests today. "Does it dispatch *here*,
+  as this account, right now?" stays host-resolved — that is what the
+  foreign-`CRON_ACCOUNT` guard checks. The witness named here,
+  `tests/sync-crontab-paced-witness.sh`, was deleted along with
+  sync-crontab.sh itself in #488.
 - The CLI resolves the same host-scoped rotation for every rotation-facing
   command, rather than always reading the shared `_paced.conf` — so on
   `dexter` (which owns `_paced.dexter.conf`), `run <p>` dispatches against
