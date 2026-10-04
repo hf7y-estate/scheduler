@@ -452,7 +452,11 @@ conf_field() {
   [ -f "$conf" ] || return 1
   v="$(grep -E "^${field}=" "$conf" | head -1 | cut -d= -f2- | tr -d '"')"
 
-  # TRAP: ONE FILE, TWO READERS. schedule/*.conf is `source`d by sync-crontab.sh and scheduler-run, where PROJECT_REPO_PATH="$HOME/..." expands; THIS reader is grep+cut+tr, so the same line came back as the literal characters `$HOME/...` and every caller below treats it as a real path.
+  # TRAP: ONE FILE, TWO READERS. schedule/*.conf is `source`d by scheduler-run
+  # (sync-crontab.sh did too, before its 2026-09-02 retirement, #454/#488),
+  # where PROJECT_REPO_PATH="$HOME/..." expands; THIS reader is grep+cut+tr,
+  # so the same line came back as the literal characters `$HOME/...` and
+  # every caller below treats it as a real path.
   case "$v" in
     '$HOME'|'$HOME'/*)     v="$HOME${v#\$HOME}" ;;
     '${HOME}'|'${HOME}'/*) v="$HOME${v#\$\{HOME\}}" ;;
@@ -2060,9 +2064,10 @@ glance_run_ledger() {
     # earns being ignored. scheduler's own row is the live example: its
     # conf still names scheduler-nightly-batch, whose log ends at a FAILED
     # on 2026-07-19, while the project is in fact dispatched by the paced
-    # runner and sync-crontab emits no line for that job at all. Say the
-    # record is stale and let the reader judge; do not assert 9 days of
-    # silence that did not happen.
+    # runner and nothing emits a cron line for that job at all (sync-crontab.sh,
+    # which once would have emitted none for it either, retired 2026-09-02,
+    # #454/#488). Say the record is stale and let the reader judge; do not
+    # assert 9 days of silence that did not happen.
     if [ "${epoch:-0}" -gt 0 ] 2>/dev/null && [ $(( $(date +%s) - epoch )) -gt $((5*86400)) ]; then
       state="stale-$state"
       detail="$detail  [record is $when -- may be an orphaned job; the paced runner may dispatch this project instead]"
