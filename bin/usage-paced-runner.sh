@@ -1087,7 +1087,16 @@ while [ "$dispatched" -lt "$MAX_PER_TICK" ] && [ "$examined" -lt "$n" ]; do
   fi
 
   # NOT A ROSTER WRITE: `state` is the human's field (#291). A finished project
-  # is live and idle; a new milestone resumes it. Slot consumed, like COOLDOWN.
+  # is live and idle; a new milestone resumes it.
+  #
+  # SLOT NOT CONSUMED (#758, DEFAULT-AFTER 2026-10-02 elapsed unreversed): a
+  # hold here is a statement that nothing was runnable, not a turn taken in
+  # the rotation -- unlike COOLDOWN/BLOCKED-HOLD/FROZEN/EXPIRED above, which
+  # are each about a row that DID have work and is being paced or refused.
+  # Leaving `dispatched` untouched means a milestone-held row no longer
+  # starves a later row with real work on a host whose PACED_MAX_PER_TICK is
+  # small; `examined` (incremented above, before this gate) still bounds the
+  # loop to one lap.
   if [ "${MILESTONE_GATE:-1}" -ne 0 ]; then
     _mslug="$_gat_slug"
     _mprobe=""
@@ -1101,7 +1110,6 @@ while [ "$dispatched" -lt "$MAX_PER_TICK" ] && [ "$examined" -lt "$n" ]; do
       if [ "${MILESTONE_GATE_BLIND_HOLDS:-1}" -ne 0 ]; then
         ledger_append "$name" "${TIER:-batch}" - MILESTONE-BLIND "$_mwhy" 2>/dev/null || true
         log "MILESTONE-BLIND $name -- $_mwhy. Holding: a predicate that could not run is not permission. MILESTONE_GATE_BLIND_HOLDS=0 to dispatch anyway."
-        dispatched=$((dispatched + 1))
         unset _mslug _mprobe _mwhy
         continue
       fi
@@ -1118,7 +1126,6 @@ while [ "$dispatched" -lt "$MAX_PER_TICK" ] && [ "$examined" -lt "$n" ]; do
           ledger_append "$name" "${TIER:-batch}" - MILESTONE-HELD "no open milestone with an open issue on $_mslug" 2>/dev/null || true
           log "MILESTONE-HELD $name -- $_mslug has no open milestone with an open issue and none names a successor. Nothing to work toward; give it one and it resumes on its own. The roster row is untouched and still live."
         fi
-        dispatched=$((dispatched + 1))
         unset _mslug _mprobe _mcount _mnext _mwhy
         continue
       else
