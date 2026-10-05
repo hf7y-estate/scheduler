@@ -22,7 +22,11 @@
 set -uo pipefail
 
 SHARE="$HOME/.local/share"
-REGISTRY="$SHARE/scheduler-registry"
+# Not $HOME-relative (#589): every project's job writes its .active/
+# .interactive markers to the one shared REGISTRY_DIR, not to this account's
+# own $HOME -- a $HOME-relative REGISTRY here would read its own account's
+# empty directory and report "none" for every project, every time.
+REGISTRY="${REGISTRY_DIR:-/run/scheduler-registry}"
 REPORTS="$HOME/reports"
 
 U=0; P=0; B=0
@@ -101,7 +105,7 @@ done
 row UNPRINTED "report mtime vs the run log disagreeing" "${disagree:-none over 1h}"
 
 echo
-echo "== right now (source: ~/.local/share/scheduler-registry/)"
+echo "== right now (source: $REGISTRY/)"
 active="$(ls "$REGISTRY"/*.active 2>/dev/null | xargs -r -n1 basename | sed 's/\.active$//' | paste -sd' ')"
 # Liveness-checked, not just "a marker file exists" -- a marker whose pid is
 # gone is exactly the stale-sensor failure this inventory is measuring, so

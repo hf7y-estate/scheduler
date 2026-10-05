@@ -147,7 +147,13 @@ PROVISIONAL_VERDICT_FILE="$STATE_DIR/provisional_verdict.txt"  # #347 item 3, se
 # whichever pushes second silently clobbers or conflicts with the other.
 # Keying this second lock by PROJECT_KEY instead of JOB_NAME is what makes
 # every tier/job for one project contend for the same slot.
-REGISTRY_DIR="$HOME/.local/share/scheduler-registry"
+#
+# NOT $HOME-relative (#589): this runs as the project's own account, and
+# half 2 below (job vs HUMAN) only fires if that resolves to the same path
+# the human's own session wrote to. lib/registry-lock.sh's default is the
+# single source of truth for that path; `:=` here only so a caller that set
+# REGISTRY_DIR before sourcing this file is still honoured.
+: "${REGISTRY_DIR:=/run/scheduler-registry}"
 REGISTRY_LOCK="$REGISTRY_DIR/${PROJECT_KEY}.lock"
 REGISTRY_MARKER="$REGISTRY_DIR/${PROJECT_KEY}.active"
 

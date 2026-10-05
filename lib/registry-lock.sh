@@ -22,8 +22,17 @@
 # guaranteed on crash), so trusting the file would wedge a project silently.
 # realisateur/bin/session-marker.sh's recorded pid was itself wrong for
 # exactly this reason once -- a stale PPID read as a live human.
+#
+# REGISTRY_DIR IS NOT $HOME-RELATIVE (#589). Half 2 only works if the writer
+# (a human's own session, running as the human) and the reader (a project's
+# job, running as that project's account) resolve the SAME path -- and
+# different accounts have different $HOME by definition. A fixed, host-wide
+# location is the only one both sides can hit without coordinating who they
+# are. /run because a marker must not survive a reboot (bin/registry-dir-
+# provision.sh creates it 1777 and ships a tmpfiles.d rule so it comes back
+# on every boot without a human in the loop).
 
-: "${REGISTRY_DIR:=$HOME/.local/share/scheduler-registry}"
+: "${REGISTRY_DIR:=/run/scheduler-registry}"
 
 # registry_claim <project_key> <job_name> <tier>
 #   0 = claimed (caller must arrange release; sets REGISTRY_MARKER)

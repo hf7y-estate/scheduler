@@ -101,6 +101,30 @@ grep -q 'exit 4' "$SLC" && ok "exit-code contract (4=deferred) preserved" || bad
 c="$(grep -c 'kill -0' "$SLC")"
 [ "$c" -eq 0 ] && ok "no leftover inline pid probe" || bad "$c inline pid probe(s) still in sweep-loop-common"
 
+echo "== 11. #589: writer and reader resolve \$HOME to different accounts, and still agree"
+# Unlike every case above, this one does NOT override REGISTRY_DIR -- the
+# point is the library's own default (/run/scheduler-registry), which must
+# not depend on $HOME at all. Two different $HOMEs stand in for the human's
+# account and the project's account; if the default ever regresses to
+# $HOME-relative, the reader below sees nothing and this fails.
+RKEY="registry-lock-witness-$$"
+HUMAN_HOME="$TMP/human-home"; JOB_HOME="$TMP/job-home"
+mkdir -p "$HUMAN_HOME" "$JOB_HOME"
+env -u REGISTRY_DIR HOME="$HUMAN_HOME" bash -c '
+  . "'"$LIB"'"
+  mkdir -p "$REGISTRY_DIR"
+  printf "pid=%s\nstarted_at=%s\ncwd=%s\n" "'"$$"'" "2026-07-27T10:00:00" "/x" \
+    > "$REGISTRY_DIR/'"$RKEY"'.interactive"
+'
+READ_PID="$(env -u REGISTRY_DIR HOME="$JOB_HOME" bash -c '
+  . "'"$LIB"'"
+  registry_human_pid "'"$RKEY"'"
+')"
+[ "$READ_PID" = "$$" ] \
+  && ok "reader (HOME=$JOB_HOME) sees the marker the writer (HOME=$HUMAN_HOME) left" \
+  || bad "reader saw pid '$READ_PID', wanted $$ -- the shared default regressed to \$HOME-relative"
+rm -f "/run/scheduler-registry/${RKEY}.interactive"
+
 echo
 echo "==== registry-lock witness: $PASS passed, $FAIL failed ===="
 [ "$FAIL" -eq 0 ]
