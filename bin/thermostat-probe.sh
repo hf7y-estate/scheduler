@@ -70,9 +70,9 @@ read -r OPEN_NOW BLOCKED_NOW OPEN_THEN BLOCKED_THEN CLOSED_IN <<<"$(jq -r \
   --arg t0 "$T0_ISO" --arg lbl "${TEMPO_BLOCKED_LABELS:-needs-human}" '
   ($lbl|split(",")) as $B
   | (map(select(.state=="OPEN"))) as $now
-  | (map(select(.createdAt <= $t0 and (.state=="OPEN" or (.closedAt // "9") > $t0)))) as $then
+  | (map(select(.createdAt <= $t0 and (.state=="OPEN" or (.closedAt // "9") > $t0)))) as $was
   | def blocked: map(select([.labels[].name] as $l | $B | any(. as $b | $l | index($b)))) | length;
-  [ ($now|length), ($now|blocked), ($then|length), ($then|blocked),
+  [ ($now|length), ($now|blocked), ($was|length), ($was|blocked),
     (map(select(.state=="CLOSED" and (.closedAt // "") > $t0))|length) ] | @tsv' <<<"$ISSUES")"
 
 case "$OPEN_NOW$BLOCKED_NOW$OPEN_THEN$BLOCKED_THEN$CLOSED_IN" in ''|*[!0-9]*) blind "could not count $SLUG's issues" ;; esac
