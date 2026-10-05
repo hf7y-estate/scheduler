@@ -30,6 +30,7 @@ selfdev-claude-token.sh
 selfdev-permissions-provision.sh
 selfdev-hooks-provision.sh
 vault-group-provision.sh
+registry-dir-provision.sh
 "
 
 # provision_channel <script> -- `provision`, or nothing (rc 1). rc 1 is a
