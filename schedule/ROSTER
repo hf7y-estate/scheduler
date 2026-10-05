@@ -13,14 +13,18 @@
 # mode having really dispatched from here.
 # WITNESS: tests/paced-roster-authority-witness.sh.
 #
-# `dose <project> --arm` / `--park` (#291) is the only supported way to
-# change `state`: one POST to the roster service, verified by re-reading it
-# (#686) -- it opens no PR and does not hand-edit this file. It refuses a uid
-# 3000-3099 self-dev caller, and refuses a project with no unix account on
-# the row's host, so no project can arm itself and arming cannot converge to
-# a break. (#521: an earlier header said "ONLY A HUMAN EDITS THIS FILE'S
-# `state` COLUMN", read cold as "a person types the change"; that is false
-# and misled an agent into reporting it as fact on 2026-09-03.)
+# `bin/dose-project.sh <project> --arm --reason "<why>"` (or `--park`, #291;
+# `--reason` is mandatory, #590) is the only supported way to change `state`:
+# one POST to the roster service, verified by re-reading it (#686) -- it
+# opens no PR and does not hand-edit this file. Use the script name, not the
+# installed `dose` front door -- it offers only `--check`/`--apply`/`--now`
+# on this host as of 2026-09-22 and has no `--arm`/`--park` (#765), so typing
+# `dose <project> --arm` exits on a usage error. It refuses a uid 3000-3099
+# self-dev caller, and refuses a project with no unix account on the row's
+# host, so no project can arm itself and arming cannot converge to a break.
+# (#521: an earlier header said "ONLY A HUMAN EDITS THIS FILE'S `state`
+# COLUMN", read cold as "a person types the change"; that is false and
+# misled an agent into reporting it as fact on 2026-09-03.)
 #
 # A new project is REGISTERED first -- a `parked` row plus
 # `schedule/<project>.conf`, and the unix account provisioned -- and only
@@ -253,12 +257,13 @@ american-cycle  | american-cycle@monkey  | 20m | live
 # account. THE ACCOUNT DOES NOT EXIST. dexter -- which hosts monkey, and so
 # every self-dev account -- was offline on 2026-09-20, so
 # realisateur/bin/setup-selfdev-project.sh could not be run. do_live exits 5
-# BROKEN on a live row whose account is missing, and `dose --arm` refuses a
-# project with no unix account on the row's host, so `parked` is the only
-# state this row can honestly hold today; it cannot arm a break.
-# Arm with `dose cinema-sanctuary --arm` once the account lands. The conf
-# carries what this row cannot -- chiefly that `python3 derive.py` exits 4 by
-# design, and that a run must not make it green. hf7y/realisateur#1263.
+# BROKEN on a live row whose account is missing, and `dose-project.sh --arm`
+# refuses a project with no unix account on the row's host, so `parked` is
+# the only state this row can honestly hold today; it cannot arm a break.
+# Arm with `bin/dose-project.sh cinema-sanctuary --arm --reason "<why>"` once
+# the account lands. The conf carries what this row cannot -- chiefly that
+# `python3 derive.py` exits 4 by design, and that a run must not make it
+# green. hf7y/realisateur#1263.
 cinema-sanctuary | cinema-sanctuary@monkey | 20m | parked
 
 # abc -- music for the Abecedarian trilogy. PARKED. Unlike cinema-sanctuary
@@ -266,7 +271,8 @@ cinema-sanctuary | cinema-sanctuary@monkey | 20m | parked
 # wired, provisioned 2026-09-23 (hf7y/realisateur#1277). Parked because
 # arming is a separate act, not because anything is broken.
 # The repo's default branch is `main`, renamed from `master` the same day.
-# Arm with `dose abc --arm` once someone decides its queue is worth a slot.
+# Arm with `bin/dose-project.sh abc --arm --reason "<why>"` once someone
+# decides its queue is worth a slot.
 abc             | abc@monkey             | 20m | parked
 
 # --- vaporwave (realisateur#695): own host, own Anthropic account, so these do
