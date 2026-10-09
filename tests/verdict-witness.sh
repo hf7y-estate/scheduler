@@ -38,7 +38,28 @@ else bad "verdict.sh --selftest failed"; "$VERDICT" --selftest; fi
 # and the expires_at assertions would silently test an empty path.
 run_tick() {
   local behaviour="$1" pre_verdict="${2:-}"
-  mkdir -p "$TMP/.local/share"
+  mkdir -p "$TMP/.local/share" "$TMP/bin"
+
+  # Case 2 drives a REAL GAVE-UP through the REAL runner, which hits
+  # file_to_realisateur (bin/usage-paced-runner.sh) -- the same escalation
+  # pull-escalation-witness.sh already shadows `scheduler` and `gh` for, and
+  # for the same reason: an unstubbed run is not routing, it is a real `gh
+  # issue create --repo hf7y/realisateur` with whatever token is ambient.
+  # This file drove it for real for who knows how long, filing the exact
+  # fixture text ("alpha declared IMPOSSIBLE on testhost ... 401s forever")
+  # as real issues on hf7y-estate/realisateur (#1412, #1428, #1430, and
+  # others before them) every time this ran somewhere `scheduler`/`gh` were
+  # both live and authenticated. MILESTONE_GATE=0 below already shows the
+  # intent to keep this hermetic; this channel was the one left unshadowed.
+  cat > "$TMP/bin/scheduler" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+  cat > "$TMP/bin/gh" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+  chmod +x "$TMP/bin/scheduler" "$TMP/bin/gh"
 
   # The fake agent: writes a verdict (or not), then exits with a chosen rc.
   cat > "$TMP/agent.sh" <<AGENT
@@ -60,6 +81,7 @@ AGENT
   fi
 
   MILESTONE_GATE=0 \
+  PATH="$TMP/bin:$PATH" \
   HOME="$TMP" \
   PACED_CONF="$TMP/rot.conf" \
   PACED_HOST=testhost \
@@ -99,6 +121,18 @@ grep -q 'outcome=GAVE-UP' <<<"$log" && ok "classified GAVE-UP" || { bad "expecte
 grep -q 'METABOLISM alpha' <<<"$log" && ok "logged the metabolism reduction" || bad "no METABOLISM line"
 grep -q '401s forever' <<<"$log" && ok "carried the agent's reason into the log" || bad "reason not logged"
 stamped && ok "expires_at stamped -- next tick will skip it" || bad "GAVE-UP did not stamp expires_at; it would keep dispatching"
+# THE POINT OF THIS FIX (hf7y-estate/realisateur#1471): GAVE-UP's escalation
+# is file_to_realisateur, which tries `scheduler -i realisateur` then falls
+# back to `gh issue create --repo hf7y/realisateur`. Both are shadowed above
+# to refuse, so this must log the escalation as attempted-and-failed, never
+# as filed -- an unshadowed run says "FILED ... to realisateur" here and a
+# real issue exists on hf7y-estate/realisateur to prove it (#1412, #1428,
+# #1430: this exact fixture, filed for real).
+grep -q "FILED FAILED" <<<"$log" && ok "escalation tried and failed closed -- no real issue filed" \
+  || { bad "escalation did not fail closed -- a real gh/scheduler call may have gone out"; echo "$log" | tail -5; }
+grep -q "FILED alpha's give-up to realisateur" <<<"$log" \
+  && bad "escalation reports SUCCESS though scheduler and gh are both stubbed to refuse -- this run just filed something real" \
+  || ok "no success line, though both channels were exercised"
 rm -rf "$TMP"
 
 echo "case 3 -- explicit DONE must be DONE, and must NOT brake"
